@@ -1062,6 +1062,7 @@ inline internal::file_dialog::file_dialog(type in_type,
             opt options /* = opt::none */)
 {
 #if _WIN32
+    printf("internal::file_dialog::file_dialog enter\n");
     std::string filter_list;
     std::regex whitespace("  *");
     for (size_t i = 0; i + 1 < filters.size(); i += 2)
@@ -1070,20 +1071,25 @@ inline internal::file_dialog::file_dialog(type in_type,
         filter_list += std::regex_replace(filters[i + 1], whitespace, ";") + '\0';
     }
     filter_list += '\0';
+    printf("internal::file_dialog::file_dialog before m_async->start_func\n");
 
     m_async->start_func([this, in_type, title, default_path, filter_list,
                          options](int *exit_code) -> std::string
     {
+        printf("m_async->start_func 1\n");
+
         (void)exit_code;
         m_wtitle = internal::str2wstr(title);
         m_wdefault_path = internal::str2wstr(default_path);
         auto wfilter_list = internal::str2wstr(filter_list);
+        printf("m_async->start_func 2\n");
 
         // Initialise COM. This is required for the new folder selection window,
         // (see https://github.com/samhocevar/portable-file-dialogs/pull/21)
         // and to avoid random crashes with GetOpenFileNameW() (see
         // https://github.com/samhocevar/portable-file-dialogs/issues/51)
         ole32_dll ole32;
+        printf("m_async->start_func 3\n");
 
         // Folder selection uses a different method
         if (in_type == type::folder)
@@ -1135,6 +1141,7 @@ inline internal::file_dialog::file_dialog(type in_type,
         ofn.hwndOwner = GetActiveWindow();
 
         ofn.lpstrFilter = wfilter_list.c_str();
+        printf("m_async->start_func 4\n");
 
         auto woutput = std::wstring(MAX_PATH * 256, L'\0');
         ofn.lpstrFile = (LPWSTR)woutput.data();
@@ -1158,8 +1165,10 @@ inline internal::file_dialog::file_dialog(type in_type,
         }
         ofn.lpstrTitle = m_wtitle.c_str();
         ofn.Flags = OFN_NOCHANGEDIR | OFN_EXPLORER;
+        printf("m_async->start_func 5\n");
 
         dll comdlg32("comdlg32.dll");
+        printf("m_async->start_func 6\n");
 
         // Apply new visual style (required for windows XP)
         new_style_context ctx;
@@ -1176,14 +1185,21 @@ inline internal::file_dialog::file_dialog(type in_type,
         }
         else
         {
+            printf("m_async->start_func 7\n");
+
             if (options & opt::multiselect)
                 ofn.Flags |= OFN_ALLOWMULTISELECT;
             ofn.Flags |= OFN_PATHMUSTEXIST;
 
             dll::proc<BOOL WINAPI (LPOPENFILENAMEW)> get_open_file_name(comdlg32, "GetOpenFileNameW");
+            printf("m_async->start_func 8\n");
             if (get_open_file_name(&ofn) == 0)
+            {
+                printf("m_async->start_func 7.5 return ''\n");
                 return "";
+            }
         }
+        printf("m_async->start_func 8\n");
 
         std::string prefix;
         for (wchar_t const *p = woutput.c_str(); *p; )
@@ -1201,9 +1217,12 @@ inline internal::file_dialog::file_dialog(type in_type,
 
             m_vector_result.push_back(prefix + filename);
         }
+        printf("m_async->start_func 9 end\n");
 
         return "";
     });
+
+    printf("internal::file_dialog::file_dialog after m_async->start_func\n");
 #elif __EMSCRIPTEN__
     // FIXME: do something
     (void)in_type;
