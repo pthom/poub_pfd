@@ -737,21 +737,32 @@ inline BOOL CALLBACK internal::executor::enum_windows_callback(HWND hwnd, LPARAM
 #if _WIN32
 inline void internal::executor::start_func(std::function<std::string(int *)> const &fun)
 {
+    printf("start_func enter\n");
     stop();
+    printf("start_func 2\n");
 
     auto trampoline = [fun, this]()
     {
+        printf("trampoline 1\n");
         // Save our thread id so that the caller can cancel us
         m_tid = GetCurrentThreadId();
+        printf("trampoline 2\n");
         EnumWindows(&enum_windows_callback, (LPARAM)this);
+        printf("trampoline 3\n");
         m_cond.notify_all();
+        printf("trampoline 4\n");
         return fun(&m_exit_code);
     };
+    printf("start_func 3\n");
 
     std::unique_lock<std::mutex> lock(m_mutex);
+    printf("start_func 3\n");
     m_future = std::async(std::launch::async, trampoline);
+    printf("start_func 4\n");
     m_cond.wait(lock);
+    printf("start_func 5\n");
     m_running = true;
+    printf("start_func 6\n");
 }
 
 #elif __EMSCRIPTEN__
@@ -815,26 +826,32 @@ inline bool internal::executor::ready(int timeout /* = default_wait_timeout */)
 {
     if (!m_running)
         return true;
+    printf("ready Enter");
 
 #if _WIN32
     if (m_future.valid())
     {
+        printf("ready 1 (valid)\n");
         auto status = m_future.wait_for(std::chrono::milliseconds(timeout));
+        printf("ready 2 (after wait)\n");
         if (status != std::future_status::ready)
         {
             // On Windows, we need to run the message pump. If the async
             // thread uses a Windows API dialog, it may be attached to the
             // main thread and waiting for messages that only we can dispatch.
             MSG msg;
+            printf("ready 3 (before PeekMessage)\n");
             while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
             {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
+            printf("ready 4 (after PeekMessage)\n");
             return false;
         }
-
+        printf("ready 5 (before m_future.get)\n");
         m_stdout = m_future.get();
+        printf("ready 6 (after m_future.get)\n");
     }
 #elif __EMSCRIPTEN__ || __NX__
     // FIXME: do something
@@ -866,6 +883,7 @@ inline bool internal::executor::ready(int timeout /* = default_wait_timeout */)
 #endif
 
     m_running = false;
+    printf("ready end\n");
     return true;
 }
 
@@ -873,7 +891,10 @@ inline void internal::executor::stop()
 {
     // Loop until the user closes the dialog
     while (!ready())
+    {
+        printf("stop\n");
         ;
+    }
 }
 
 // dll implementation
