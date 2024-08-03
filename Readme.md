@@ -1,4 +1,4 @@
-Demonstrates a serious issue in Windows GitHub runners: any exe that uses std::unique_lock<std::mutex> is unreliable!
+Demonstrates a serious issue in Windows GitHub runners: any exe that uses `std::unique_lock<std::mutex>` is unreliable!
 
 
 This "hello mutex" program will produce a perfectly valid executable, when compiled on a standard windows machine.
