@@ -1,4 +1,3 @@
 cmake_minimum_required(VERSION 3.20)
-project(pfd_test)
+project(mutex_issue)
 add_executable(main main.cpp)
-add_executable(blah main2.cpp)
