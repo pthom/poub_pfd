@@ -1,0 +1,32 @@
+name: Build and Release Executable
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up CMake
+      uses: lukka/get-cmake@v3
+      with:
+        cmakeVersion: '3.20.0' # You can specify the required CMake version
+
+    - name: Configure with CMake
+      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: cmake --build build --config Release
+
+    - name: Archive executable
+      uses: actions/upload-artifact@v3
+      with:
+        name: executable
+        path: build/Release/main.exe  # Adjust the path to your executable if different
