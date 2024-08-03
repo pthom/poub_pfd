@@ -1115,6 +1115,7 @@ inline internal::file_dialog::file_dialog(type in_type,
         // Folder selection uses a different method
         if (in_type == type::folder)
         {
+            printf("m_async->start_func / folder 1\n");
 #if PFD_HAS_IFILEDIALOG
             if (flags(flag::is_vista))
             {
@@ -1128,12 +1129,14 @@ inline internal::file_dialog::file_dialog(type in_type,
                     return select_folder_vista(ifd, options & opt::force_path);
             }
 #endif
+            printf("m_async->start_func / folder 2\n");
 
             BROWSEINFOW bi;
             memset(&bi, 0, sizeof(bi));
 
             bi.lpfn = &bffcallback;
             bi.lParam = (LPARAM)this;
+            printf("m_async->start_func / folder 3\n");
 
             if (flags(flag::is_vista))
             {
@@ -1142,6 +1145,7 @@ inline internal::file_dialog::file_dialog(type in_type,
                 bi.ulFlags |= BIF_EDITBOX;
                 bi.ulFlags |= BIF_STATUSTEXT;
             }
+            printf("m_async->start_func / folder 4\n");
 
             auto *list = SHBrowseForFolderW(&bi);
             std::string ret;
@@ -1153,6 +1157,7 @@ inline internal::file_dialog::file_dialog(type in_type,
                 ret = internal::wstr2str(buffer);
                 delete[] buffer;
             }
+            printf("m_async->start_func / folder 5\n");
             return ret;
         }
         printf("m_async->start_func 3.1\n");
