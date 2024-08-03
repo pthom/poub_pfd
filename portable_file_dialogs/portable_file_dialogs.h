@@ -1155,11 +1155,15 @@ inline internal::file_dialog::file_dialog(type in_type,
             }
             return ret;
         }
+        printf("m_async->start_func 3.1\n");
 
         OPENFILENAMEW ofn;
         memset(&ofn, 0, sizeof(ofn));
+        printf("m_async->start_func 3.2\n");
         ofn.lStructSize = sizeof(OPENFILENAMEW);
+        printf("m_async->start_func 3.3\n");
         ofn.hwndOwner = GetActiveWindow();
+        printf("m_async->start_func 3.4\n");
 
         ofn.lpstrFilter = wfilter_list.c_str();
         printf("m_async->start_func 4\n");
